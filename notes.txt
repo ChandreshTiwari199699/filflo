@@ -1,0 +1,285 @@
+The b2b po is now shifted as bulk raw material outward
+and the custom order thing is now b2b order
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 30px;
+            line-height: 1.4;
+            color: #000;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .header .seller-info {
+            text-align: left;
+        }
+        .header .qr-code {
+            text-align: right;
+        }
+        .header h1 {
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            margin: 10px 0 0 0;
+            font-weight: bold;
+        }
+        .section {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 5px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table td {
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+        .details-bold {
+            font-weight: bold;
+        }
+        .party-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .party {
+            width: 48%;
+            line-height: 1.6;
+        }
+        .line-separator {
+            border-top: 1px solid #000;
+            margin: 5px 0;
+        }
+    </style>
+    <title>Invoice</title>
+</head>
+<body>
+    <div class="header">
+        <div class="seller-info">
+            <p><span class="details-bold">Seller GST:</span> <%= requestBody.SellerDtls.Gstin %></p>
+            <p><span class="details-bold">Seller Name:</span> <%= requestBody.SellerDtls.LglNm %></p>
+        </div>
+        <div class="qr-code">
+            <img src="<%= qrCodeData %>" alt="QR Code" width="100">
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>Tax Invoice</h1>
+    </div>
+
+    <!-- E-Invoice Details -->
+    <div class="section">
+        <div class="section-title">E-INVOICE DETAILS</div>
+        <p><span class="details-bold">IRN:</span> <%= invoiceData.Irn %></p>
+        <div class="line-separator"></div>
+        <div class="ack-line">
+            <span><span class="details-bold">Acknowledgment No:</span> <%= invoiceData.AckNo %></span>
+            <span><span class="details-bold">Acknowledgment Date:</span> <%= invoiceData.AckDt %></span>
+        </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details -->
+    <div class="section">
+        <div class="section-title">TRANSACTION DETAILS</div>
+        <p><span class="details-bold">Invoice No:</span> <%= requestBody.DocDtls.No %></p>
+        <p><span class="details-bold">Invoice Date:</span> <%= requestBody.DocDtls.Dt %></p>
+        <p><span class="details-bold">Supply Type:</span> <%= requestBody.TranDtls.SupTyp %></p>
+    </div>
+
+    <!-- Party Details -->
+    <div class="party-details">
+        <div class="party">
+            <p class="details-bold">Seller Details</p>
+            <p>GSTIN: <%= requestBody.SellerDtls.Gstin %></p>
+            <p><%= requestBody.SellerDtls.LglNm %></p>
+            <p><%= requestBody.SellerDtls.Addr1 %>, <%= requestBody.SellerDtls.Loc %> - <%= requestBody.SellerDtls.Pin %></p>
+        </div>
+        <div class="party">
+            <p class="details-bold">Buyer Details</p>
+            <p>GSTIN: <%= requestBody.BuyerDtls.Gstin %></p>
+            <p><%= requestBody.BuyerDtls.LglNm %></p>
+            <p><%= requestBody.BuyerDtls.Addr1 %>, <%= requestBody.BuyerDtls.Loc %> - <%= requestBody.BuyerDtls.Pin %></p>
+        </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="section-title">Items</div>
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>SNo</th>
+                <th>Description</th>
+                <th>HSN Code</th>
+                <th>Quantity</th>
+                <th>Unit Price (Rs)</th>
+                <th>Total (Rs)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% requestBody.ItemList.forEach((item, index) => { %>
+            <tr>
+                <td><%= index + 1 %></td>
+                <td><%= item.PrdDesc %></td>
+                <td><%= item.HsnCd %></td>
+                <td><%= item.Qty %></td>
+                <td><%= item.UnitPrice.toFixed(2) %></td>
+                <td><%= item.TotItemVal %></td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Grand Total: Rs. <%= requestBody.ValDtls.TotInvVal %></p>
+        <p>This is a computer-generated invoice, no signature required.</p>
+    </div>
+</body>
+</html>
+
+
+import React, { useRef } from "react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
+import { Download } from "lucide-react";
+import type { InvoiceData } from "../types/invoice";
+
+interface InvoiceProps {
+  data: InvoiceData;
+}
+
+export const Invoice: React.FC<InvoiceProps> = ({ data }) => {
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const generatePDF = async () => {
+    if (invoiceRef.current) {
+      const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      pdf.save(`Invoice-${data.invoiceDetails.number}.pdf`);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Download PDF Button */}
+      <button
+        onClick={generatePDF}
+        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2"
+      >
+        <Download className="w-5 h-5" /> Download PDF
+      </button>
+
+      {/* Invoice Content */}
+      <div ref={invoiceRef} className="bg-white p-8 shadow-lg">
+        {/* Header */}
+        <div className="flex justify-between items-start border-b pb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{data.seller.companyName}</h1>
+            <p className="text-sm text-gray-600">{data.seller.address}</p>
+            <p className="text-sm text-gray-600">GST: {data.seller.gstNumber}</p>
+          </div>
+          <div className="text-right">
+            <h2 className="text-xl font-semibold text-gray-900">TAX INVOICE</h2>
+            <p className="text-sm text-gray-600">Invoice #: {data.invoiceDetails.number}</p>
+            <p className="text-sm text-gray-600">Date: {data.invoiceDetails.date}</p>
+          </div>
+        </div>
+
+        {/* Billing & Shipping */}
+        <div className="grid grid-cols-2 gap-8 my-6">
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-gray-800 mb-2">Bill To:</h3>
+            <p className="font-medium">{data.billing.companyName}</p>
+            <p className="text-sm text-gray-600">{data.billing.address}</p>
+            <p className="text-sm text-gray-600">GST: {data.billing.gstNumber}</p>
+          </div>
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-gray-800 mb-2">Ship To:</h3>
+            <p className="font-medium">{data.shipping.companyName}</p>
+            <p className="text-sm text-gray-600">{data.shipping.address}</p>
+            <p className="text-sm text-gray-600">GST: {data.shipping.gstNumber}</p>
+          </div>
+        </div>
+
+        {/* Items Table */}
+        <div className="mt-8 overflow-x-auto">
+          <table className="w-full border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 text-left">Item</th>
+                <th className="px-4 py-2 text-right">Qty</th>
+                <th className="px-4 py-2 text-right">Rate</th>
+                <th className="px-4 py-2 text-right">IGST</th>
+                <th className="px-4 py-2 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.map((item) => (
+                <tr key={item.serialNo} className="border-b">
+                  <td className="px-4 py-2">{item.name}</td>
+                  <td className="px-4 py-2 text-right">{item.quantity}</td>
+                  <td className="px-4 py-2 text-right">₹{item.ratePerUnit.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right">{item.igst}%</td>
+                  <td className="px-4 py-2 text-right">₹{item.totalAmount.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="bg-gray-100 font-semibold">
+                <td colSpan={4} className="px-4 py-2 text-right">Subtotal:</td>
+                <td className="px-4 py-2 text-right">₹{data.totals.subtotal.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td colSpan={4} className="px-4 py-2 text-right">Total GST:</td>
+                <td className="px-4 py-2 text-right">₹{data.totals.totalIgst.toFixed(2)}</td>
+              </tr>
+              <tr className="bg-gray-100 font-bold">
+                <td colSpan={4} className="px-4 py-2 text-right">Grand Total:</td>
+                <td className="px-4 py-2 text-right">₹{data.totals.grandTotal.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* IRN Section */}
+        <div className="mt-8 flex justify-between border-t pt-6">
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-2">IRN Details</h3>
+            <p className="text-sm text-gray-600">IRN: {data.irn.number}</p>
+          </div>
+          <div className="qr-code">
+            <img src={data.irn.qrCode} alt="QR Code" className="h-24 w-24" />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 pt-6 border-t text-center text-sm text-gray-600">
+          <p>Thank you for your business!</p>
+          <p className="mt-1">This is a computer-generated invoice. No signature is required.</p>
+        </div>
+      </div>
+    </div>
+  );
+};

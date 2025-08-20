@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 30px;
+            line-height: 1.4;
+            color: #000;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .header .seller-info {
+            text-align: left;
+        }
+        .header .qr-code {
+            text-align: right;
+        }
+        .header h1 {
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            margin: 10px 0 0 0;
+            font-weight: bold;
+        }
+        .section  {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table td {
+            border: 1px solid #000;
+            padding: 5px;
+        }
+        .details-bold {
+            font-weight: bold;
+        }
+        .party-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .party {
+            width: 48%;
+            line-height: 1.6;
+        }
+        .line-separator {
+            border-top: 1px solid #000;
+            margin: 5px 0;
+        }
+        .ack-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+}
+
+.ack-details {
+    flex: 1;
+    padding-right: 10px; /* Adds space between elements */
+}
+
+.section p {
+    margin: 5px 0; /* Adjusts spacing between lines */
+}
+
+
+    </style>
+    <title>Invoice</title>
+</head>
+<body>
+    <div class="header">
+        <div class="seller-info">
+            <p><span class="details-bold">Seller GST:</span> <%= requestBody.SellerDtls.Gstin %></p>
+            <p><span class="details-bold">Seller Name:</span> <%= requestBody.SellerDtls.LglNm %></p>
+        </div>
+        <div class="qr-code">
+            <img src="<%= qrCodeData %>" alt="QR Code" width="100">
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>Tax Invoice</h1>
+    </div>
+
+    <!-- E-Invoice Details -->
+    <div class="section">
+        <div class="section-title">E-INVOICE DETAILS</div>
+        <div class="line-separator"></div>
+        <p><span class="details-bold">IRN:</span> <%= invoiceData.Irn %></p>
+        <div class="line-separator"></div>
+        
+        <div class="ack-container">
+            <div class="ack-details">
+                <span class="details-bold">Acknowledgment No:</span> <%= invoiceData.AckNo %>
+            </div>
+            <div class="ack-details">
+                <span class="details-bold">Acknowledgment Date:</span> <%= invoiceData.AckDt %>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Transaction Details -->
+    <div class="section">
+        <div class="section-title">TRANSACTION DETAILS</div>
+        <div class="line-separator"></div>
+        <div class="ack-container">
+            <div class="ack-details">
+                <span class="details-bold">Supply Type Code:</span> <%=requestBody.TranDtls.SupTyp%>
+            </div>
+            <div class="ack-details">
+                <span class="details-bold">Invoice No:</span> <%=  %>
+            </div>
+        </div>
+    <div class="line-separator"></div>
+    <p><span class="details-bold">Place of Supply:</span> <%= requestBody.BuyerDtls.Pos %></p>
+    <div class="line-separator"></div>
+    <div class="ack-container">
+        <div class="ack-details">
+            <span class="details-bold">Document Type:</span> <%=requestBody.DocDtls.Typ%>
+        </div>
+        <div class="ack-details">
+            <span class="details-bold">Invoice Date:</span> <%=  new Date(invoiceData.AckDt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+        </div>
+    </div>
+    <div class="line-separator"></div>
+        <p><span class="details-bold">PO No:</span> <%= requestBody.DocDtls.No %></p>
+    </div>
+</div>
+
+
+ <!-- Party Details -->
+<!-- Party Details -->
+<div class="section">
+    <div class="section-title">PARTY DETAILS</div>
+    <table class="details-table">
+        <tr>
+            <td style="width: 50%; vertical-align: top; border-right: 1px solid #000; padding-right: 10px;">
+                <p class="details-bold">Seller Details</p>
+                <p><span class="details-bold">GSTIN:</span> <%= requestBody.SellerDtls.Gstin %></p>
+                <p><span class="details-bold">PAN:</span> AAYCS8675E</p>
+                <p><span class="details-bold">MSME REGISTRATION:</span> UDYAM-DL-08-0011848 </p>
+                <p><%= requestBody.SellerDtls.LglNm %></p>
+                <p></span> Hadbasat No - 161, Khewat No/Khata No - 495/510,792/841, Sector -76, Groz tolls link road, Village- Kherki Dhola </p>
+                <p><span class="details-bold">Dist:</span> <%= requestBody.SellerDtls.Loc %></p>
+                <p><span class="details-bold">Pincode:</span> <%= requestBody.SellerDtls.Pin %></p>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+                <p class="details-bold">Buyer Details</p>
+                <p><span class="details-bold">GSTIN:</span> <%= requestBody.BuyerDtls.Gstin %></p>
+                <p class="details-bold">Bill To</p>
+                <p></span> <%= requestBody.BuyerDtls.LglNm %></p>
+                <p></span> <%= requestBody.BuyerDtls.Addr1 %>, <%= requestBody.BuyerDtls.Loc %> - <%= requestBody.BuyerDtls.Pin %></p>
+                <p></span> <%= requestBody.BuyerDtls.ContactName %></p>
+                <p></span> <%= requestBody.BuyerDtls.PhoneNo %></p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+
+    <!-- Items Table -->
+    <div class="section-title">Items</div>
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>SNo</th>
+                <th>Description</th>
+                <th>HSN Code</th>
+                <th>Quantity</th>
+                <th>Unit Price (Rs)</th>
+                <th>Total (Rs)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% requestBody.ItemList.forEach((item, index) => { %>
+            <tr>
+                <td><%= index + 1 %></td>
+                <td><%= item.PrdDesc %></td>
+                <td><%= item.HsnCd %></td>
+                <td><%= item.Qty %></td>
+                <td><%= item.UnitPrice.toFixed(2) %></td>
+                <td><%= item.TotItemVal %></td>
+            </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Grand Total: Rs. <%= requestBody.ValDtls.TotInvVal %></p>
+        <p>This is a computer-generated invoice, no signature required.</p>
+    </div>
+</body>
+</html>
